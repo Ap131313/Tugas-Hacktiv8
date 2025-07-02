@@ -1,0 +1,165 @@
+# Daily Mood Tracker 
+import ipywidgets as widgets
+from IPython.display import display, clear_output
+
+# --- UI COMPONENTS ---
+header = widgets.HTML(value="""
+<div style='background: linear-gradient(to right, #2193b0, #6dd5ed); padding: 20px; border-radius: 8px; text-align: center;'>
+    <h1 style='color: white; font-family: Arial;'>Daily Mood Tracker</h1>
+</div>
+""")
+
+welcome = widgets.HTML(value="""
+<div style='padding: 15px; text-align: center;'>
+    <h3 style='font-family: Arial;'>Welcome! How are you feeling today?</h3>
+    <p style='color: #555;'>Log your daily mood and reflect on your emotional wellbeing 🌈</p>
+</div>
+""")
+
+mood_dropdown = widgets.Dropdown(
+    options=['😊 Happy', '😐 Neutral', '😢 Sad', '😠 Angry', '😰 Anxious', '😴 Tired'],
+    description='Mood:',
+    layout=widgets.Layout(width='50%')
+)
+
+note_input = widgets.Textarea(
+    placeholder='Add a short note (optional)...',
+    description='Note:',
+    layout=widgets.Layout(width='90%', height='80px')
+)
+
+submit_button = widgets.Button(
+    description='Submit Mood',
+    button_style='info',
+    layout=widgets.Layout(width='30%', align_self='center')
+)
+
+save_status = widgets.Label(value='')
+
+form = widgets.VBox([mood_dropdown, note_input, submit_button, save_status], layout=widgets.Layout(align_items='center'))
+
+# --- MOOD DATA STORAGE ---
+mood_entries = []
+editing_index = None
+
+# --- OUTPUT DISPLAY ---
+output = widgets.Output()
+
+def save_to_local():
+    # Simulate saving to local storage (in real case, use API or file I/O)
+    save_status.value = f"Saved {len(mood_entries)} entries."
+
+def refresh_output():
+    output.clear_output()
+    with output:
+        display(widgets.HTML("<h4 style='color: #333; text-align: center;'>Mood History</h4>"))
+        for i in range(len(mood_entries)-1, -1, -1):  # dari yang terbaru ke lama
+            m, n = mood_entries[i]
+
+            if editing_index == i:
+                # EDIT MODE
+                edit_mood = widgets.Text(value=m, description='Mood:')
+                edit_note = widgets.Textarea(value=n, description='Note:', layout=widgets.Layout(width='90%', height='60px'))
+                save_button = widgets.Button(description="💾 Save", button_style='success')
+                cancel_button = widgets.Button(description="Cancel", button_style='danger')
+
+                def save(change=None, i=i):
+                    mood_entries[i] = (edit_mood.value, edit_note.value)
+                    global editing_index
+                    editing_index = None
+                    refresh_output()
+
+                def cancel(change=None):
+                    global editing_index
+                    editing_index = None
+                    refresh_output()
+
+                save_button.on_click(save)
+                cancel_button.on_click(cancel)
+
+                display(widgets.VBox([edit_mood, edit_note, widgets.HBox([save_button, cancel_button])]))
+            else:
+                # NORMAL MODE
+                delete_button = widgets.Button(description="❌", layout=widgets.Layout(width='40px'))
+                edit_button = widgets.Button(description="✏️", layout=widgets.Layout(width='40px'))
+
+                def make_delete_handler(index):
+                    def delete(_):
+                        mood_entries.pop(index)
+                        refresh_output()
+                    return delete
+
+                def make_edit_handler(index):
+                    def edit(_):
+                        global editing_index
+                        editing_index = index
+                        refresh_output()
+                    return edit
+
+                delete_button.on_click(make_delete_handler(i))
+                edit_button.on_click(make_edit_handler(i))
+
+                entry_text = widgets.HTML(value=f"""
+                    <div style='background-color: #e3f2fd; padding: 12px; border-radius: 8px; border: 1px solid #90caf9;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%;'>
+                        <b style='color: #0d47a1;'>Entry {i+1}:</b> {m}<br>
+                        <span style='color: #333;'><i>Note:</i> {n if n.strip() else "-"}</span>
+                    </div>
+                """)
+
+                buttons_box = widgets.HBox([edit_button, delete_button])
+                buttons_box.layout.justify_content = 'flex-end'
+                buttons_box.layout.align_items = 'flex-start'
+                buttons_box.layout.width = 'auto'
+
+                entry_text = widgets.HTML(value=f"""
+                    <div style='background-color: #e3f2fd; padding: 12px; border-radius: 8px; border: 1px solid #90caf9;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.05); width: 100%;'>
+                        <b style='color: #0d47a1;'>Entry {i+1}:</b> {m}<br>
+                        <span style='color: #333;'><i>Note:</i> {n if n.strip() else "-"}</span>
+                    </div>
+                """)
+
+                buttons_box = widgets.HBox([edit_button, delete_button])
+                buttons_box.layout.justify_content = 'flex-end'
+                buttons_box.layout.padding = '0px 10px 5px 10px'  # padding kanan kiri & bawah
+                buttons_box.layout.width = '100%'
+
+                entry_box = widgets.VBox([
+                    buttons_box,
+                    entry_text
+                ])
+                entry_box.layout.margin = '10px 0px'
+                entry_box.layout.border = 'none'
+
+
+                display(entry_box)
+
+def handle_submit(_):
+    global editing_index
+    mood = mood_dropdown.value
+    note = note_input.value
+
+    if editing_index is not None and 0 <= editing_index < len(mood_entries): # Added check here
+        mood_entries[editing_index] = (mood, note)
+        submit_button.description = "Submit Mood"
+        editing_index = None
+    else:
+        mood_entries.append((mood, note))
+
+    note_input.value = ''
+    save_to_local()
+    refresh_output()
+
+submit_button.on_click(handle_submit)
+
+# --- TABS (Views) ---
+form_tab = widgets.VBox([header, welcome, form])
+history_tab = widgets.VBox([output])
+tabs = widgets.Tab(children=[form_tab, history_tab])
+tabs.set_title(0, 'Log Mood')
+tabs.set_title(1, 'Mood History')
+
+# --- INITIAL DISPLAY ---
+display(tabs)
+refresh_output()
