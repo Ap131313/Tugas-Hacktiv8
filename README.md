@@ -29,8 +29,40 @@ To Deploy on Netlify:
 - OR connect your GitHub repo and select this project folder.
 
 Prompting Strategy via IBM Granite 
-1. Create a landing page to track daily moods using HTML, CSS, and JavaScript. Include mood input, optional note, view history, edit/delete actions, and store data in local storage.
-2. Create a Daily Mood Tracker with mood dropdown, note input, submit button, editable history, and confirmation modal.
-3. Generate a Daily Mood Tracker with tabbed layout, mood dropdown, note, localStorage, confirmation modal on delete, and mobile responsiveness.
 
+You are a frontend developer assistant.
+Your task is to generate a complete HTML/CSS/JavaScript codebase for a responsive web app called **Daily Mood Tracker**.
 
+Requirements:
+- Input form with:
+  - Dropdown for mood (😊 Happy, 😐 Neutral, 😢 Sad, 😠 Angry, 😰 Anxious, 😴 Tired)
+  - Textarea for optional notes
+- Two tabs:
+  - Log Mood (form input)
+  - Mood History (display all previous entries)
+- Use localStorage to store and persist mood entries
+- Full CRUD:
+  - Create: Submit form to save entry
+  - Read: View entries in "Mood History"
+  - Update: Edit entry, prefill form, resubmit
+  - Delete: Show custom confirmation modal before deletion
+- Responsive UI (mobile-first):
+  - Use flexbox/grid layouts, media queries
+  - Avoid elements overflowing on small screens
+- Good UX:
+  - Highlight active tab
+  - Reset form after submit
+  - Custom modal dialog for delete confirmation
+  - Buttons for ✏️ Edit and ❌ Delete per entry
+
+Example (for reference, do NOT copy):
+A contact manager app with:
+- Tabs: "Add Contact", "Contact List"
+- localStorage data
+- Modal confirmation before delete
+- Edit form support
+
+Use vanilla HTML, CSS, and JavaScript only.
+Do not use external frameworks or libraries.
+
+Output only the complete working HTML file.
